@@ -1,0 +1,45 @@
+# Node
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+pnpm-debug.log*
+.npm/
+.yarn/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Local data and artifacts
+eval-results/
+evals/results.json
+*.sqlite
+*.db
+data/
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
