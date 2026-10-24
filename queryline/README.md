@@ -126,6 +126,12 @@ pnpm test        # guard matrix, dialect SQL, agent loop, API, metrics
 
 The guard matrix is property-oriented: `tests/guard.test.ts` covers DDL, multi-statement, PII, wildcard PII, tenant isolation, keyword-in-string, CTE and subquery resolution, and the Oracle lexical fallback.
 
+## Deviations from the spec
+
+- **`pg` + SQL migrations instead of Prisma.** The control plane needs pgvector index control and the warehouse side is already raw SQL across three dialects; an ORM would add codegen without hiding anything. SQL lives in `sql/`.
+- **Single package, not a pnpm workspace.** Modules are split by domain (`api`, `worker`, `ai`, `warehouse`) so the workspace split is mechanical if the project grows.
+- **Retrieval is lexical.** pgvector tables are migrated but no embedding provider is wired yet.
+
 ## Known limitations
 
 - **Oracle validation can fall back to lexical.** `node-sql-parser` has no Oracle grammar. Statements that fail a Postgres parse are checked lexically and flagged `validation: "lexical"` in the trace and response. The reader role and read-only transaction are the backstop.

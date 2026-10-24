@@ -8,7 +8,7 @@ Three production-shaped AI systems in three distinct domains. Each one is a real
 |---|---|---|---|---|---|
 | 1 | [Ledgerline](docs/projects/01-ledgerline.md) | Fintech — multi-PSP settlement reconciliation | TypeScript, Fastify, Postgres, Drizzle, BullMQ | Exactly-once postings under partial batch failure | Reason-code macro-F1 ≥ 0.85, ≤ $0.004/exception, p95 ≤ 2.5s |
 | 2 | [Beacon](docs/projects/02-beacon.md) | SRE — on-call incident response agent | Python, FastAPI, Postgres + pgvector, Celery | Investigating with failing tools and a hard token budget | Root-cause top-1 ≥ 0.75, 0 unsafe actions, ≤ $0.12/incident |
-| 3 | [Queryline](docs/projects/03-queryline.md) | Analytics — self-serve text-to-SQL copilot | TypeScript, Fastify, Postgres, Prisma, BullMQ | Arbitrary user input against a read-only warehouse | Execution accuracy ≥ 0.78, 100% unsafe-query block rate |
+| 3 | [Queryline](docs/projects/03-queryline.md) | Analytics — self-serve text-to-SQL copilot | TypeScript, Fastify, Postgres / SQL Server / Oracle, BullMQ | Arbitrary user input against a read-only warehouse | Execution accuracy ≥ 0.78, 100% unsafe-query block rate |
 
 > **Queryline is implemented.** See [`queryline/`](queryline/README.md) for the working TypeScript service with PostgreSQL, SQL Server, and Oracle adapters, AST guardrails, the agent loop, eval harness, API, and BullMQ worker.
 

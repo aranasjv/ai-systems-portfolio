@@ -39,7 +39,7 @@ Arbitrary user input against a production-shaped warehouse, multi-tenant isolati
 |---|---|
 | Runtime | Node 22, TypeScript 5.7 strict, ESM |
 | API | Fastify 5 |
-| Data | Postgres 16 (warehouse-shaped seed), Prisma 6, pgvector |
+| Data | Postgres 16 control plane (`pg` + SQL migrations, pgvector); warehouse is Postgres, SQL Server, or Oracle |
 | Queue | Redis 7 + BullMQ 5 |
 | SQL safety | `node-sql-parser` AST validation + read-only DB role + `statement_timeout` |
 | Tests | Vitest 3, Testcontainers |
