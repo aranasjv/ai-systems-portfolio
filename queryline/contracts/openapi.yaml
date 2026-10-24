@@ -1,0 +1,279 @@
+openapi: 3.1.0
+info:
+  title: Queryline API
+  version: 0.1.0
+  description: |
+    Self-serve analytics copilot. Questions are answered by generating one
+    read-only SELECT inside the configured dialect (Postgres, SQL Server, or
+    Oracle), validated by an AST guard and executed under a read-only role.
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /healthz:
+    get:
+      operationId: health
+      responses:
+        '200':
+          description: Liveness and build metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, version]
+                properties:
+                  status: { type: string, const: ok }
+                  version: { type: string }
+                  uptimeSeconds: { type: integer }
+
+  /v1/questions:
+    post:
+      operationId: createQuestion
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, maxLength: 200 }
+        - name: X-Tenant-Id
+          in: header
+          required: false
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tenantId, question]
+              properties:
+                tenantId: { type: string, maxLength: 128 }
+                question: { type: string, minLength: 3, maxLength: 4000 }
+                conversationId: { type: string, maxLength: 128 }
+      responses:
+        '202':
+          description: Accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, status]
+                properties:
+                  id: { type: string, pattern: '^qry_' }
+                  status: { type: string, enum: [queued] }
+        '400':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /v1/queries:
+    get:
+      operationId: listQueries
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Keyset-paginated query history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryList'
+
+  /v1/queries/{id}:
+    get:
+      operationId: getQuery
+      parameters:
+        - $ref: '#/components/parameters/QueryId'
+      responses:
+        '200':
+          description: Query summary with a result preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Query'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /v1/queries/{id}/rows:
+    get:
+      operationId: getQueryRows
+      parameters:
+        - $ref: '#/components/parameters/QueryId'
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Paginated result rows
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, columns, pageInfo]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: array
+                      items: {}
+                  columns:
+                    type: array
+                    items: { type: string }
+                  pageInfo:
+                    type: object
+                    required: [offset, limit, hasMore]
+                    properties:
+                      offset: { type: integer }
+                      limit: { type: integer }
+                      nextOffset: { type: [integer, 'null'] }
+                      hasMore: { type: boolean }
+        '404':
+          $ref: '#/components/responses/Problem'
+
+components:
+  parameters:
+    QueryId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    RateLimited:
+      description: Queue depth exceeded; retry later
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+
+    QueryList:
+      type: object
+      required: [data, pageInfo]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Query'
+        pageInfo:
+          type: object
+          required: [nextCursor, hasMore]
+          properties:
+            nextCursor: { type: [string, 'null'] }
+            hasMore: { type: boolean }
+
+    Query:
+      type: object
+      required: [id, tenantId, question, status, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        question: { type: string }
+        status:
+          type: string
+          enum: [queued, running, succeeded, refused, failed]
+        error: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        result:
+          oneOf:
+            - $ref: '#/components/schemas/Answer'
+            - type: 'null'
+
+    Answer:
+      type: object
+      required: [outcome, columns, rowCount, degraded, repairAttempts, usage, latencyMs]
+      properties:
+        outcome: { type: string, enum: [answered, refused, failed] }
+        sql: { type: [string, 'null'] }
+        explanation: { type: [string, 'null'] }
+        columns:
+          type: array
+          items: { type: string }
+        rowCount: { type: integer }
+        preview:
+          type: array
+          items:
+            type: array
+            items: {}
+        truncated: { type: boolean }
+        chart:
+          oneOf:
+            - type: object
+              properties:
+                type: { type: string, enum: [bar, line, table, number] }
+                x: { type: [string, 'null'] }
+                y:
+                  type: array
+                  items: { type: string }
+            - type: 'null'
+        refusal:
+          oneOf:
+            - type: object
+              properties:
+                reason: { type: string }
+                detail: { type: string }
+            - type: 'null'
+        degraded:
+          type: array
+          items: { type: string }
+        repairAttempts: { type: integer }
+        validation:
+          type: [string, 'null']
+          enum: [ast, lexical, null]
+        usage:
+          type: object
+          required: [inputTokens, outputTokens, costUsd]
+          properties:
+            inputTokens: { type: integer }
+            outputTokens: { type: integer }
+            costUsd: { type: number }
+        latencyMs: { type: integer }
+
+    RefusalReason:
+      type: string
+      enum:
+        - empty
+        - too_long
+        - multiple_statements
+        - not_select
+        - forbidden_keyword
+        - unknown_table
+        - pii_column
+        - wildcard_pii
+        - missing_tenant_predicate
+        - parse_error
+        - pagination_requires_order_by
+        - model_refusal
+        - admission_rejected
+        - execution_error
+        - budget_exceeded

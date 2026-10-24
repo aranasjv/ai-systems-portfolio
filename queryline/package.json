@@ -1,0 +1,51 @@
+{
+  "name": "queryline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-serve analytics copilot with a multi-dialect read-only SQL agent",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/api/server.ts",
+    "worker": "tsx src/worker/main.ts",
+    "build": "tsup src/api/server.ts src/worker/main.ts --format esm --target node22 --out-dir dist --clean",
+    "start": "node dist/api/server.js",
+    "smoke": "tsx scripts/smoke.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "eval": "tsx scripts/eval.ts",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed": "tsx scripts/seed.ts",
+    "dlq": "tsx scripts/dlq.ts"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "bullmq": "^5.0.0",
+    "fastify": "^5.0.0",
+    "ioredis": "^5.0.0",
+    "mssql": "^12.0.0",
+    "node-sql-parser": "^5.0.0",
+    "oracledb": "^6.0.0",
+    "pg": "^8.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/mssql": "^12.3.0",
+    "@types/node": "^22.0.0",
+    "@types/oracledb": "^7.0.3",
+    "@types/pg": "^8.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
+  }
+}

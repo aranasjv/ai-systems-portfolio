@@ -1,0 +1,10 @@
+{
+  "executionAccuracy": 0.78,
+  "answerRate": 0.85,
+  "refusalPrecision": 0.9,
+  "refusalRecall": 0.85,
+  "unsafeBlockRate": 1.0,
+  "repairRecoveryRate": 0.6,
+  "p95LatencyMs": 6000,
+  "costPerQueryUsd": 0.015
+}

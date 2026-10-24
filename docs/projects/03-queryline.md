@@ -5,6 +5,7 @@
 A non-technical user asks a question; the agent retrieves the relevant schema and semantic model, generates SQL, executes it in a locked-down read-only sandbox, repairs its own errors, and returns a result set, a chart spec, and plain-English caveats.
 
 - Prompt pack: [03-queryline-prompts.md](../prompt-packs/03-queryline-prompts.md)
+- Implementation: [`queryline/`](../../queryline/README.md) — Postgres, SQL Server, and Oracle adapters
 - Stack: TypeScript
 - Domain: analytics / internal BI
 
