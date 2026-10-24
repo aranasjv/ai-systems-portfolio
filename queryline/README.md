@@ -64,6 +64,23 @@ The control plane is always Postgres (query history, verified examples, dead let
 
 ## Quick start
 
+### No Docker (embedded Postgres)
+
+```bash
+cd queryline
+cp .env.example .env     # then set ports to 55432 if 5432 is reserved on Windows
+pnpm install
+pnpm dev:db              # terminal 1: embedded Postgres on :55432
+pnpm db:migrate && pnpm db:seed
+pnpm smoke               # proves guard -> admission -> execute on real data
+pnpm dev                 # terminal 2: API on :3000
+```
+
+The local `.env` should use port 55432 on Windows, which commonly reserves 5432
+(WinNAT/Hyper-V); binding it surfaces as `could not bind ... Permission denied`.
+
+### Docker
+
 ```bash
 cd queryline
 cp .env.example .env

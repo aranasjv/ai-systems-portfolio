@@ -27,6 +27,7 @@ htmlcov/
 !.env.example
 
 # Local data and artifacts
+.pgdata/
 eval-results/
 evals/results.json
 *.sqlite

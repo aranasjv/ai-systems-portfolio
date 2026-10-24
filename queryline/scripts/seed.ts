@@ -149,6 +149,11 @@ async function main(): Promise<void> {
   const adapter = createWarehouseAdapter(config.warehouse);
   await adapter.connect();
 
+  // Oracle uses the connecting user as the schema, so its tables are unqualified.
+  const prefix =
+    config.warehouse.kind === 'oracle' ? '' : `${config.warehouse.schema ?? 'warehouse'}.`;
+  const table = (name: string): string => `${prefix}${name}`;
+
   try {
     const data = buildData();
 
@@ -156,7 +161,7 @@ async function main(): Promise<void> {
     for (let index = 0; index < data.customers.length; index += batchSize) {
       await adapter.admin().exec(
         insertSql(
-          'customers',
+          table('customers'),
           ['id', 'tenant_id', 'name', 'email', 'phone', 'region', 'created_at'],
           data.customers
             .slice(index, index + batchSize)
@@ -175,7 +180,7 @@ async function main(): Promise<void> {
 
     await adapter.admin().exec(
       insertSql(
-        'products',
+        table('products'),
         ['id', 'tenant_id', 'name', 'category', 'price_cents'],
         data.products.map((product) => [
           product.id,
@@ -190,7 +195,7 @@ async function main(): Promise<void> {
     for (let index = 0; index < data.orders.length; index += batchSize) {
       await adapter.admin().exec(
         insertSql(
-          'orders',
+          table('orders'),
           ['id', 'tenant_id', 'customer_id', 'status', 'total_cents', 'currency', 'ordered_at'],
           data.orders
             .slice(index, index + batchSize)
@@ -210,7 +215,7 @@ async function main(): Promise<void> {
     for (let index = 0; index < data.orderItems.length; index += 60) {
       await adapter.admin().exec(
         insertSql(
-          'order_items',
+          table('order_items'),
           ['id', 'order_id', 'product_id', 'quantity', 'unit_price_cents'],
           data.orderItems
             .slice(index, index + 60)

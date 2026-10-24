@@ -8,6 +8,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev:db": "tsx scripts/dev-postgres.ts",
     "dev": "tsx watch src/api/server.ts",
     "worker": "tsx src/worker/main.ts",
     "build": "tsup src/api/server.ts src/worker/main.ts --format esm --target node22 --out-dir dist --clean",
@@ -40,6 +41,7 @@
     "@types/node": "^22.0.0",
     "@types/oracledb": "^7.0.3",
     "@types/pg": "^8.0.0",
+    "embedded-postgres": "18.4.0-beta.17",
     "eslint": "^9.0.0",
     "prettier": "^3.0.0",
     "tsup": "^8.0.0",

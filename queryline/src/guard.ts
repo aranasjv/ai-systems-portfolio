@@ -410,12 +410,9 @@ export function validateSql(request: GuardRequest): GuardResult {
   }
 
   if (validation === 'ast' && ast) {
-    let selectsWildcard = false;
-    walk(ast, (node) => {
-      if (columnName(node) === '*') selectsWildcard = true;
-      if (node.type === 'star') selectsWildcard = true;
-      if (isNode(node.column) && node.column.value === '*') selectsWildcard = true;
-    });
+    // Only projection columns count. Walking the whole AST would treat the
+    // `*` inside COUNT(*) as a wildcard projection.
+    const selectsWildcard = projectionHasWildcard(ast as AnyNode);
 
     if (selectsWildcard && piiColumns.size > 0) {
       return refusal(
@@ -466,6 +463,18 @@ export function validateSql(request: GuardRequest): GuardResult {
     validation,
     hasOrderBy,
   };
+}
+
+function projectionHasWildcard(ast: AnyNode): boolean {
+  if (!Array.isArray(ast.columns)) return false;
+
+  return ast.columns.some((entry) => {
+    if (!isNode(entry)) return false;
+    if (entry.type === 'star') return true;
+    const expr = isNode(entry.expr) ? entry.expr : entry;
+    if (expr.type === 'star') return true;
+    return columnName(expr) === '*';
+  });
 }
 
 function walkColumns(ast: unknown): string[] {
